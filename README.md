@@ -1,4 +1,4 @@
-# Dockerfile Maven Support
+# Dockerfile Maven Support [![Build Status](https://travis-ci.com/spotify/dockerfile-maven.svg?token=1Nm1N8cG5T5xoHi9Uo1X&branch=master)](https://travis-ci.com/spotify/dockerfile-maven)
 
 This is a Maven plugin which tries to seamlessly integrate Docker with
 Maven.
