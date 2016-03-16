@@ -1,7 +1,7 @@
-# Dockerfile Maven Support [![Build Status](https://travis-ci.com/spotify/dockerfile-maven.svg?token=1Nm1N8cG5T5xoHi9Uo1X&branch=master)](https://travis-ci.com/spotify/dockerfile-maven) [![Maven Central](https://img.shields.io/maven-central/v/com.spotify/dockerfile-maven.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.spotify%22%20dockerfile-maven*) [![License](https://img.shields.io/github/license/spotify/dockerfile-maven.svg)](LICENSE.txt)
+# Dockerfile Maven [![Build Status](https://travis-ci.com/spotify/dockerfile-maven.svg?token=1Nm1N8cG5T5xoHi9Uo1X&branch=master)](https://travis-ci.com/spotify/dockerfile-maven) [![Maven Central](https://img.shields.io/maven-central/v/com.spotify/dockerfile-maven.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.spotify%22%20dockerfile-maven*) [![License](https://img.shields.io/github/license/spotify/dockerfile-maven.svg)](LICENSE.txt)
 
-This is a Maven plugin which tries to seamlessly integrate Docker with
-Maven.
+This is a Maven plugin and extension which help to seamlessly
+integrate Docker with Maven.
 
 The design goals are:
 
