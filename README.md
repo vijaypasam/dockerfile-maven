@@ -22,6 +22,11 @@ The design goals are:
     build the projects in the correct order.  This is useful when you
     want to run integration tests involving multiple services.
 
+This project adheres to the [Open Code of Conduct][code-of-conduct].
+By participating, you are expected to honor this code.
+
+[code-of-conduct]: https://github.com/spotify/code-of-conduct/blob/master/code-of-conduct.md
+
 # Example
 
 For more examples, see the [integration test](./plugin/src/it) directory.
