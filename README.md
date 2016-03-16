@@ -27,6 +27,12 @@ By participating, you are expected to honor this code.
 
 [code-of-conduct]: https://github.com/spotify/code-of-conduct/blob/master/code-of-conduct.md
 
+# Set-up
+
+This plugin requires Java 7 or later, and Apache Maven 3 or later.  To
+run the integration tests or to use the plugin in practice, a working
+Docker set-up is needed.
+
 # Example
 
 For more examples, see the [integration test](./plugin/src/it) directory.
