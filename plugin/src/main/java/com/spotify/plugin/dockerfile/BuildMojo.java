@@ -102,14 +102,17 @@ public class BuildMojo extends AbstractDockerMojo {
     if (!new File(contextDirectory, "Dockerfile").exists() &&
         !new File(contextDirectory, "dockerfile").exists()) {
       log.error("Missing Dockerfile in context directory: " + contextDirectory.getPath());
-      throw new MojoFailureException("Missing Dockerfile in context directory: " + contextDirectory.getPath());
+      throw new MojoFailureException("Missing Dockerfile in context directory: " +
+                                     contextDirectory.getPath());
     }
 
     final LoggingProgressHandler progressHandler = new LoggingProgressHandler(log, verbose);
-    final DockerClient.BuildParameter[] buildParameters =
-        pullNewerImage
-        ? new DockerClient.BuildParameter[]{DockerClient.BuildParameter.PULL_NEWER_IMAGE}
-        : new DockerClient.BuildParameter[]{};
+    final DockerClient.BuildParam[] buildParameters;
+    if (pullNewerImage) {
+      buildParameters = new DockerClient.BuildParam[]{DockerClient.BuildParam.pullNewerImage()};
+    } else {
+      buildParameters = new DockerClient.BuildParam[]{};
+    }
 
     log.info(""); // Spacing around build progress
     try {
@@ -117,13 +120,11 @@ public class BuildMojo extends AbstractDockerMojo {
         final String name = formatImageName(repository, tag);
         log.info(MessageFormat.format("Image will be built as {0}", name));
         log.info(""); // Spacing around build progress
-        dockerClient.build(contextDirectory.toPath(), name, progressHandler,
-                           buildParameters);
+        dockerClient.build(contextDirectory.toPath(), name, progressHandler, buildParameters);
       } else {
         log.info("Image will be built without a name");
         log.info(""); // Spacing around build progress
-        dockerClient.build(contextDirectory.toPath(), progressHandler,
-                           buildParameters);
+        dockerClient.build(contextDirectory.toPath(), progressHandler, buildParameters);
       }
     } catch (DockerException | IOException | InterruptedException e) {
       throw new MojoExecutionException("Could not build image", e);
