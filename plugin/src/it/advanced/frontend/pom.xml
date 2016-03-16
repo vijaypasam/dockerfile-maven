@@ -24,9 +24,9 @@
       <version>2.1</version>
     </dependency>
     <dependency>
-      <groupId>org.glassfish.jersey.connectors</groupId>
-      <artifactId>jersey-apache-connector</artifactId>
-      <version>2.17</version>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>18.0</version>
     </dependency>
 
     <dependency>
@@ -57,7 +57,7 @@
     <dependency>
       <groupId>com.spotify</groupId>
       <artifactId>helios-testing</artifactId>
-      <version>0.8.380</version>
+      <version>0.8.700</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -117,13 +117,6 @@
             <configuration>
               <repository>spotify/dockerfile-advanced-frontend</repository>
             </configuration>
-          </execution>
-          <execution>
-            <id>push</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>push</goal>
-            </goals>
           </execution>
         </executions>
       </plugin>

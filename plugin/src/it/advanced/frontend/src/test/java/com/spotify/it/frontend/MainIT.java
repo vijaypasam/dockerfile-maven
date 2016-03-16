@@ -1,26 +1,30 @@
 package com.spotify.it.frontend;
 
 import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import com.google.common.net.HostAndPort;
 
+import com.spotify.helios.testing.HeliosDeploymentResource;
+import com.spotify.helios.testing.HeliosSoloDeployment;
 import com.spotify.helios.testing.TemporaryJob;
 import com.spotify.helios.testing.TemporaryJobs;
 
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -29,11 +33,21 @@ import static org.hamcrest.Matchers.is;
 
 public class MainIT {
 
-  @Rule
-  public final TemporaryJobs temporaryJobs = TemporaryJobs.create();
+  @ClassRule
+  public static final HeliosDeploymentResource HELIOS = new HeliosDeploymentResource(
+      HeliosSoloDeployment.fromEnv()
+          .checkForNewImages(true)
+          .removeHeliosSoloOnExit(true)
+          .build());
 
-  private WebTarget frontend;
-  private WebTarget backend;
+  @Rule
+  public final TemporaryJobs temporaryJobs = TemporaryJobs.builder()
+      .client(HELIOS.client())
+      .deployTimeoutMillis(TimeUnit.MINUTES.toMillis(1))
+      .build();
+
+  private URI frontend;
+  private URI backend;
 
   @Before
   public void setUp() throws Exception {
@@ -44,20 +58,16 @@ public class MainIT {
         .port("http", 1337)
         .deploy();
     HostAndPort backendAddress = backendJob.address("http");
-    URI backendUri = httpUri(backendAddress);
+    backend = httpUri(backendAddress);
 
     TemporaryJob frontendJob = temporaryJobs.job()
         .image(Files.readFirstLine(new File("target/docker/image-name"),
                                    Charsets.UTF_8))
-        .command(backendUri.toString())
+        .command(backend.toString())
         .port("http", 1338)
         .deploy();
     HostAndPort frontendAddress = frontendJob.address("http");
-    URI frontendUri = httpUri(frontendAddress);
-
-    Client client = ClientBuilder.newClient();
-    frontend = client.target(frontendUri);
-    backend = client.target(backendUri);
+    frontend = httpUri(frontendAddress);
   }
 
   private URI httpUri(HostAndPort frontendAddress) {
@@ -67,19 +77,26 @@ public class MainIT {
 
   @Test
   public void testVersion() throws Exception {
-    String version = backend.path("/api/version").request(MediaType.TEXT_PLAIN).get(String.class);
-    String homepage = frontend.path("/").request(MediaType.TEXT_HTML).get(String.class);
+    String version = requestString(backend.resolve("/api/version"));
+    String homepage = requestString(frontend.resolve("/"));
 
     assertThat(homepage, containsString("Backend version: " + version));
   }
 
   @Test
   public void testLowercase() throws Exception {
-    String homepage = frontend.path("/").request(MediaType.TEXT_HTML).get(String.class);
+    String homepage;
+    homepage = requestString(frontend.resolve("/"));
     Pattern pattern = Pattern.compile("Lower case of ([^ <]+) is according to backend ([^ <]+)");
 
     Matcher matcher = pattern.matcher(homepage);
     assertThat(matcher.find(), describedAs("the pattern was found", is(true)));
     assertThat(matcher.group(2), is(matcher.group(1).toLowerCase()));
+  }
+
+  private String requestString(URI uri) throws IOException {
+    try (InputStream is = uri.toURL().openStream()) {
+      return CharStreams.toString(new InputStreamReader(is, StandardCharsets.UTF_8));
+    }
   }
 }

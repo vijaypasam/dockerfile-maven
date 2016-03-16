@@ -82,13 +82,6 @@
               <repository>spotify/dockerfile-advanced-backend</repository>
             </configuration>
           </execution>
-          <execution>
-            <id>push</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>push</goal>
-            </goals>
-          </execution>
         </executions>
       </plugin>
     </plugins>

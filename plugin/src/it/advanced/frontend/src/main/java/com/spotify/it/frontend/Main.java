@@ -1,14 +1,14 @@
 package com.spotify.it.frontend;
 
+import com.google.common.io.CharStreams;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Random;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
 
 import spark.Spark;
 
@@ -23,22 +23,24 @@ public class Main {
 
     URI backendUri = URI.create(args[0]);
 
-    Client client = ClientBuilder.newClient();
-    WebTarget backend = client.target(backendUri);
-
     Random random = new SecureRandom();
 
     Spark.port(1338);
     Spark.get("/", (req, res) -> {
       String uppercase = new BigInteger(130, random).toString(32).toUpperCase();
 
-      String version = backend.path("/api/version")
-          .request(MediaType.TEXT_PLAIN)
-          .get(String.class);
-      String lowercase = backend.path("/api/lowercase/{something}")
-          .resolveTemplate("something", uppercase)
-          .request(MediaType.TEXT_PLAIN)
-          .get(String.class);
+      String version;
+      try (InputStream versionStream = backendUri.resolve("/api/version").toURL().openStream()) {
+        version =
+            CharStreams.toString(new InputStreamReader(versionStream, StandardCharsets.UTF_8));
+      }
+
+      String lowercase;
+      try (InputStream lowercaseStream =
+               backendUri.resolve("/api/lowercase/" + uppercase).toURL().openStream()) {
+        lowercase =
+            CharStreams.toString(new InputStreamReader(lowercaseStream, StandardCharsets.UTF_8));
+      }
 
       return "<!DOCTYPE html><html>"
              + "<head><title>frontend</title></head>"
