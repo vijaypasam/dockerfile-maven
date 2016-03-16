@@ -73,6 +73,9 @@
           <processStartTag>-/-/-</processStartTag>
           <processEndTag>-\-\-</processEndTag>
           <sectionDelimiter>%%</sectionDelimiter>
+          <roots>
+            <root>${project.basedir}/src</root>
+          </roots>
         </configuration>
         <executions>
           <execution>
