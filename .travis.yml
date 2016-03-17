@@ -12,7 +12,7 @@ services:
 install: true # This runs the "true" command in the install phase; thus skipping install
 script:
   - |
-    if [ "$TRAVIS_BRANCH" == master && "$TRAVIS_PULL_REQUEST" == false ]
+    if [ "$TRAVIS_BRANCH" == master && "$TRAVIS_PULL_REQUEST" == false && "$TRAVIS_JDK_VERSION" == "oraclejdk8" ]
     then mvn deploy -s travis-settings.xml
     else mvn verify
     fi
