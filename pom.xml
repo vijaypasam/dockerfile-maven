@@ -21,9 +21,8 @@
   </properties>
 
   <scm>
-    <connection>scm:git:ssh://git@github.com:spotify/dockerfile-maven.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:spotify/dockerfile-maven.git
-    </developerConnection>
+    <connection>scm:git:ssh://git@github.com/spotify/dockerfile-maven.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/spotify/dockerfile-maven.git</developerConnection>
     <tag>HEAD</tag>
     <url>https://github.com/spotify/dockerfile-maven</url>
   </scm>
