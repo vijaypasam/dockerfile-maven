@@ -27,13 +27,13 @@ By participating, you are expected to honor this code.
 
 [code-of-conduct]: https://github.com/spotify/code-of-conduct/blob/master/code-of-conduct.md
 
-# Set-up
+## Set-up
 
 This plugin requires Java 7 or later, and Apache Maven 3 or later.  To
 run the integration tests or to use the plugin in practice, a working
 Docker set-up is needed.
 
-# Example
+## Example
 
 For more examples, see the [integration test](./plugin/src/it) directory.
 
@@ -80,18 +80,18 @@ ADD target/lib           /usr/share/myservice/lib
 ADD target/myservice.jar /usr/share/myservice/myservice.jar
 ```
 
-# What does it give me?
+## What does it give me?
 
 There are many advantages to using this plugin for your builds.
 
-## Faster build times
+### Faster build times
 
 This plugin lets you leverage Docker cache more consistently, vastly
 speeding up your builds by letting you cache Maven dependencies in
 your image.  It also encourages avoiding the `maven-shade-plugin`,
 which also greatly speeds up builds.
 
-## Consistent build lifecycle
+### Consistent build lifecycle
 
 You no longer have to say something like:
 
@@ -108,7 +108,7 @@ Instead, it is simply enough to say:
 With the basic configuration, this will make sure that the image is
 built and pushed at the correct times.
 
-## Depend on Docker images of other services
+### Depend on Docker images of other services
 
 You can depend on the Docker information of another project, because
 this plugin attaches project metadata when it builds Docker images.
