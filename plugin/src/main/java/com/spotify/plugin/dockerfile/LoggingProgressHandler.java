@@ -20,12 +20,12 @@
 
 package com.spotify.plugin.dockerfile;
 
+import com.spotify.docker.client.ProgressHandler;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.ProgressMessage;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
-
-import com.spotify.docker.client.DockerException;
-import com.spotify.docker.client.ProgressHandler;
-import com.spotify.docker.client.messages.ProgressMessage;
 
 import org.apache.maven.plugin.logging.Log;
 

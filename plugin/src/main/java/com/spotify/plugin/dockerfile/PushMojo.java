@@ -21,7 +21,7 @@
 package com.spotify.plugin.dockerfile;
 
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.DockerException;
+import com.spotify.docker.client.exceptions.DockerException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
