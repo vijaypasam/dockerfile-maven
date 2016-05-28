@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.spotify</groupId>
     <artifactId>dockerfile-maven</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>dockerfile-maven-plugin</artifactId>
@@ -29,7 +29,7 @@
     <dependency>
       <groupId>com.spotify</groupId>
       <artifactId>dockerfile-maven-extension</artifactId>
-      <version>1.2.1</version>
+      <version>1.2.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
