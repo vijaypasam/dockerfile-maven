@@ -4,7 +4,7 @@
 
   <groupId>com.spotify</groupId>
   <artifactId>dockerfile-maven</artifactId>
-  <version>1.2.2</version>
+  <version>1.2.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Dockerfile Maven Support</name>
@@ -23,7 +23,7 @@
   <scm>
     <connection>scm:git:ssh://git@github.com/spotify/dockerfile-maven.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/spotify/dockerfile-maven.git</developerConnection>
-    <tag>v1.2.2</tag>
+    <tag>HEAD</tag>
     <url>https://github.com/spotify/dockerfile-maven</url>
   </scm>
 
