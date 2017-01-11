@@ -1,9 +1,9 @@
-/*
- * -/-/-
+/*-
+ * -\-\-
  * Dockerfile Maven Plugin
- * %%
- * Copyright (C) 2015 - 2016 Spotify AB
- * %%
+ * --
+ * Copyright (C) 2016 Spotify AB
+ * --
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,19 +15,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * -\-\-
+ * -/-/-
  */
 
 package com.spotify.plugin.dockerfile;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
 import com.spotify.docker.client.ProgressHandler;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ProgressMessage;
-
-import com.google.common.base.Objects;
-import com.google.common.base.Splitter;
-
-import org.apache.maven.plugin.logging.Log;
 
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -35,6 +32,8 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.apache.maven.plugin.logging.Log;
 
 class LoggingProgressHandler implements ProgressHandler {
 

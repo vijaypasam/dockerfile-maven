@@ -1,9 +1,9 @@
-/*
- * -/-/-
+/*-
+ * -\-\-
  * Dockerfile Maven Plugin
- * %%
- * Copyright (C) 2015 - 2016 Spotify AB
- * %%
+ * --
+ * Copyright (C) 2016 Spotify AB
+ * --
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +15,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * -\-\-
+ * -/-/-
  */
 
 package com.spotify.plugin.dockerfile;
@@ -35,13 +35,18 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-@Mojo(name = "build", defaultPhase = LifecyclePhase.PACKAGE, requiresProject = true, threadSafe = true)
+@Mojo(name = "build",
+    defaultPhase = LifecyclePhase.PACKAGE,
+    requiresProject = true,
+    threadSafe = true)
 public class BuildMojo extends AbstractDockerMojo {
 
   /**
    * Directory containing the Dockerfile to build.
    */
-  @Parameter(defaultValue = "${project.basedir}", property = "dockerfile.contextDirectory", required = true)
+  @Parameter(defaultValue = "${project.basedir}",
+      property = "dockerfile.contextDirectory",
+      required = true)
   private File contextDirectory;
 
   /**
@@ -87,8 +92,8 @@ public class BuildMojo extends AbstractDockerMojo {
       return;
     }
 
-    final String imageId =
-        buildImage(dockerClient, log, verbose, contextDirectory, repository, tag, pullNewerImage, noCache);
+    final String imageId = buildImage(
+        dockerClient, log, verbose, contextDirectory, repository, tag, pullNewerImage, noCache);
 
     if (imageId == null) {
       log.warn("Docker build was successful, but no image was built");
@@ -124,11 +129,11 @@ public class BuildMojo extends AbstractDockerMojo {
 
     log.info(MessageFormat.format("Building Docker context {0}", contextDirectory));
 
-    if (!new File(contextDirectory, "Dockerfile").exists() &&
-        !new File(contextDirectory, "dockerfile").exists()) {
+    if (!new File(contextDirectory, "Dockerfile").exists()
+        && !new File(contextDirectory, "dockerfile").exists()) {
       log.error("Missing Dockerfile in context directory: " + contextDirectory.getPath());
-      throw new MojoFailureException("Missing Dockerfile in context directory: " +
-                                     contextDirectory.getPath());
+      throw new MojoFailureException("Missing Dockerfile in context directory: "
+                                     + contextDirectory.getPath());
     }
 
     final LoggingProgressHandler progressHandler = new LoggingProgressHandler(log, verbose);
