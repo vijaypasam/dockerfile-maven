@@ -1,6 +1,6 @@
 # Dockerfile Maven
 
-[![Build Status](https://travis-ci.org/spotify/dockerfile-maven.svg?branch=master)](https://travis-ci.org/spotify/dockerfile-maven) [![Maven Central](https://img.shields.io/maven-central/v/com.spotify/dockerfile-maven.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.spotify%22%20dockerfile-maven) [![License](https://img.shields.io/github/license/spotify/dockerfile-maven.svg)](LICENSE.txt)
+[![Build Status](https://travis-ci.org/spotify/dockerfile-maven.svg?branch=master)](https://travis-ci.org/spotify/dockerfile-maven)
 [![Maven Central](https://img.shields.io/maven-central/v/com.spotify/dockerfile-maven.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.spotify%22%20dockerfile-maven)
 [![License](https://img.shields.io/github/license/spotify/dockerfile-maven.svg)](LICENSE)
 
