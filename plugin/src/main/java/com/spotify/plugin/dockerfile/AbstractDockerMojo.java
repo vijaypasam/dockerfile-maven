@@ -20,24 +20,26 @@
 
 package com.spotify.plugin.dockerfile;
 
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.auth.ConfigFileRegistryAuthSupplier;
+import com.spotify.docker.client.auth.MultiRegistryAuthSupplier;
+import com.spotify.docker.client.auth.RegistryAuthSupplier;
+import com.spotify.docker.client.auth.gcr.ContainerRegistryAuthSupplier;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
-
-import com.spotify.docker.client.gcr.ContainerRegistryAuthSupplier;
-import com.spotify.docker.client.messages.RegistryAuthSupplier;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-
-import java.util.concurrent.ExecutorService;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.execution.MavenSession;
@@ -380,16 +382,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
   }
 
   @Nonnull
-  protected DockerClient openDockerClient() throws MojoExecutionException {
-    ContainerRegistryAuthSupplier authSupplier = null;
-    try {
-      authSupplier = ContainerRegistryAuthSupplier.forApplicationDefaultCredentials()
-          .build();
-      getLog().info("Using Google application credentials");
-    } catch (IOException ex) {
-      // No GCP default credentials available
-      getLog().debug("Failed to create Google default credentials", ex);
-    }
+  private DockerClient openDockerClient() throws MojoExecutionException {
+    final RegistryAuthSupplier authSupplier = createRegistryAuthSupplier();
 
     try {
       return DefaultDockerClient.fromEnv()
@@ -401,4 +395,69 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
       throw new MojoExecutionException("Could not load Docker certificates", e);
     }
   }
+
+  @Nonnull
+  private RegistryAuthSupplier createRegistryAuthSupplier() {
+    final List<RegistryAuthSupplier> suppliers = new ArrayList<>();
+    suppliers.add(new ConfigFileRegistryAuthSupplier());
+
+    try {
+      final RegistryAuthSupplier googleSupplier = googleContainerRegistryAuthSupplier();
+      if (googleSupplier != null) {
+        suppliers.add(0, googleSupplier);
+      }
+    } catch (IOException ex) {
+      getLog().info("ignoring exception while loading Google credentials", ex);
+    }
+
+    return new MultiRegistryAuthSupplier(suppliers);
+  }
+
+  /**
+   * Attempt to load a GCR compatible RegistryAuthSupplier based on a few conditions:
+   * <ol>
+   * <li>First check to see if the environemnt variable DOCKER_GOOGLE_CREDENTIALS is set and points
+   * to a readable file</li>
+   * <li>Otherwise check if the Google Application Default Credentials can be loaded</li>
+   * </ol>
+   * Note that we use a special environment variable of our own in addition to any environment
+   * variable that the ADC loading uses (GOOGLE_APPLICATION_CREDENTIALS) in case there is a need for
+   * the user to use the latter env var for some other purpose in their build.
+   *
+   * @return a GCR RegistryAuthSupplier, or null
+   * @throws IOException if an IOException occurs while loading the credentials
+   */
+  @Nullable
+  private RegistryAuthSupplier googleContainerRegistryAuthSupplier() throws IOException {
+    GoogleCredentials credentials = null;
+
+    final String googleCredentialsPath = System.getenv("DOCKER_GOOGLE_CREDENTIALS");
+    if (googleCredentialsPath != null) {
+      final File file = new File(googleCredentialsPath);
+      if (file.exists()) {
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+          credentials = GoogleCredentials.fromStream(inputStream);
+          getLog().info("Using Google credentials from file: " + file.getAbsolutePath());
+        }
+      }
+    }
+
+    // use the ADC last
+    if (credentials == null) {
+      try {
+        credentials = GoogleCredentials.getApplicationDefault();
+        getLog().info("Using Google application default credentials");
+      } catch (IOException ex) {
+        // No GCP default credentials available
+        getLog().debug("Failed to load Google application default credentials", ex);
+      }
+    }
+
+    if (credentials == null) {
+      return null;
+    }
+
+    return ContainerRegistryAuthSupplier.forCredentials(credentials).build();
+  }
+
 }
