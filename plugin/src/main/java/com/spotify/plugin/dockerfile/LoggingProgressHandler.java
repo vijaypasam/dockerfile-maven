@@ -22,6 +22,7 @@ package com.spotify.plugin.dockerfile;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.spotify.docker.client.ProgressHandler;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ProgressMessage;
@@ -73,12 +74,12 @@ class LoggingProgressHandler implements ProgressHandler {
     }
   }
 
-  void handleGeneric(@Nullable String stream, @Nonnull String status) {
+  void handleGeneric(@Nullable String stream, @Nullable String status) {
     final String value;
     if (stream != null) {
       value = trimNewline(stream);
     } else {
-      value = status;
+      value = Strings.nullToEmpty(status);
     }
     for (String line : LINE_SPLITTER.split(value)) {
       log.info(line);
