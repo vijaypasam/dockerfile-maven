@@ -40,6 +40,7 @@
           <configuration>
             <includeTestSourceDirectory>true</includeTestSourceDirectory>
             <violationSeverity>warning</violationSeverity>
+            <excludes>**/generated-sources/**/*</excludes>
           </configuration>
         </plugin>
       </plugins>
