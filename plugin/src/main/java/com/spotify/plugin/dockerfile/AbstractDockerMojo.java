@@ -192,6 +192,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
   private JarArchiver jarArchiver;
 
   /**
+   * Allows disabling of Google Container Registry authentication support. The support is enabled by
+   * default, and should be a no-op (and fail fast) in most non-GCR environments, but this behavior
+   * can be explicitly disabled with this property if needed.
+   */
+  @Parameter(defaultValue = "true", property = "dockerfile.googleContainerRegistryEnabled")
+  private boolean googleContainerRegistryEnabled;
+
+  /**
    * The Maven project helper.
    */
   @Component
@@ -401,13 +409,17 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
     final List<RegistryAuthSupplier> suppliers = new ArrayList<>();
     suppliers.add(new ConfigFileRegistryAuthSupplier());
 
-    try {
-      final RegistryAuthSupplier googleSupplier = googleContainerRegistryAuthSupplier();
-      if (googleSupplier != null) {
-        suppliers.add(0, googleSupplier);
+    if (googleContainerRegistryEnabled) {
+      try {
+        final RegistryAuthSupplier googleSupplier = googleContainerRegistryAuthSupplier();
+        if (googleSupplier != null) {
+          suppliers.add(0, googleSupplier);
+        }
+      } catch (IOException ex) {
+        getLog().info("Ignoring exception while loading Google credentials", ex);
       }
-    } catch (IOException ex) {
-      getLog().info("ignoring exception while loading Google credentials", ex);
+    } else {
+      getLog().info("Google Container Registry support is disabled");
     }
 
     return new MultiRegistryAuthSupplier(suppliers);
