@@ -87,7 +87,7 @@ public class BuildMojo extends AbstractDockerMojo {
   private boolean noCache;
 
   /**
-   * Custom build arguments
+   * Custom build arguments.
    */
   @Parameter(property = "dockerfile.buildArgs")
   private Map<String,String> buildArgs;
@@ -103,7 +103,8 @@ public class BuildMojo extends AbstractDockerMojo {
     }
 
     final String imageId = buildImage(
-        dockerClient, log, verbose, contextDirectory, repository, tag, pullNewerImage, noCache, buildArgs);
+        dockerClient, log, verbose, contextDirectory, repository, tag, pullNewerImage, noCache,
+        buildArgs);
 
     if (imageId == null) {
       log.warn("Docker build was successful, but no image was built");
@@ -161,7 +162,7 @@ public class BuildMojo extends AbstractDockerMojo {
         final String encodedBuildArgs = URLEncoder.encode(new Gson().toJson(buildArgs), "utf-8");
         buildParameters.add(new DockerClient.BuildParam("buildargs", encodedBuildArgs));
       } catch (UnsupportedEncodingException e) {
-         throw new MojoExecutionException("Could not build image", e);
+        throw new MojoExecutionException("Could not build image", e);
       }
     }
 
