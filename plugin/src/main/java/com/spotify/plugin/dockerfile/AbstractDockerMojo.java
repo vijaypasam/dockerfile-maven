@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.DockerConfigReader;
 import com.spotify.docker.client.auth.ConfigFileRegistryAuthSupplier;
 import com.spotify.docker.client.auth.MultiRegistryAuthSupplier;
 import com.spotify.docker.client.auth.RegistryAuthSupplier;
@@ -93,6 +94,18 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
   @Parameter(defaultValue = "${project.build.directory}/docker",
       property = "dockerfile.dockerInfoDirectory", required = true)
   protected File dockerInfoDirectory;
+
+  /**
+   * Path to docker config file, if the default is not acceptable.
+   */
+  @Parameter(property = "dockerfile.dockerConfigFile")
+  protected File dockerConfigFile;
+
+  /**
+   * A maven server id, in order to use maven settings to supply server auth.
+   */
+  @Parameter(defaultValue = "false", property = "dockerfile.useMavenSettingsForAuth")
+  protected boolean useMavenSettingsForAuth;
 
   /**
    * Directory where test metadata will be written during build.
@@ -407,7 +420,21 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
   @Nonnull
   private RegistryAuthSupplier createRegistryAuthSupplier() {
     final List<RegistryAuthSupplier> suppliers = new ArrayList<>();
-    suppliers.add(new ConfigFileRegistryAuthSupplier());
+
+    if (useMavenSettingsForAuth) {
+      suppliers.add(new MavenRegistryAuthSupplier(session.getSettings()));
+    }
+
+    if (dockerConfigFile == null || "".equals(dockerConfigFile.getName())) {
+      suppliers.add(new ConfigFileRegistryAuthSupplier());
+    } else {
+      suppliers.add(
+          new ConfigFileRegistryAuthSupplier(
+            new DockerConfigReader(),
+            dockerConfigFile.toPath()
+          )
+      );
+    }
 
     if (googleContainerRegistryEnabled) {
       try {
