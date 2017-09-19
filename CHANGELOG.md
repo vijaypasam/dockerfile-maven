@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.6 (unreleased)
+## 1.3.6 (released September 13 2017)
 
 - Add support for using maven settings.xml file to provide docker authorization ([65][])
 
