@@ -69,6 +69,9 @@ package` and push it with `mvn deploy`.  Of course you can also say
   <configuration>
     <repository>spotify/foobar</repository>
     <tag>${project.version}</tag>
+    <buildArgs>
+      <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+    </buildArgs>
   </configuration>
 </plugin>
 ```
@@ -84,7 +87,8 @@ ENTRYPOINT ["/usr/bin/java", "-jar", "/usr/share/myservice/myservice.jar"]
 # Add Maven dependencies (not shaded into the artifact; Docker-cached)
 ADD target/lib           /usr/share/myservice/lib
 # Add the service itself
-ADD target/myservice.jar /usr/share/myservice/myservice.jar
+ARG JAR_FILE
+ADD target/${JAR_FILE} /usr/share/myservice/myservice.jar
 ```
 
 ## What does it give me?
