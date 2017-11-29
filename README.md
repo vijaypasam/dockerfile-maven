@@ -236,3 +236,19 @@ Then, in your maven settings file, add configuration for the server:
 ```
 
 exactly as you would for any other server configuration.
+
+## Skip Docker Goals Bound to Maven Phases
+
+You can pass options to maven to disable the docker goals.
+
+| Maven Option        | What Does _that thing_ Do?           |
+| ------------- |:-------------:|
+| dockerfile.skip | Disables the entire dockerfile plugin; all goals become no-ops. |
+| dockerfile.build.skip | Disables the build goal; it becomes a no-op. |
+| dockerfile.tag.skip | Disables the tag goal; it becomes a no-op. |
+| dockerfile.push.skip | Disables the push goal; it becomes a no-op. |
+
+For example to skip the entire dockerfile plugin:
+```
+mvn clean package -Ddockerfile.skip
+```
