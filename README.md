@@ -274,7 +274,7 @@ or simpler,
 
 with this command line call
 
-    mvn goal -DDockerfile.username=... -Ddockerfile.password=...
+    mvn goal -Ddockerfile.username=... -Ddockerfile.password=...
     
 
 ## Skip Docker Goals Bound to Maven Phases
