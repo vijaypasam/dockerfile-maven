@@ -1,4 +1,4 @@
-FROM scratch
+FROM hello-world
 MAINTAINER David Flemström <dflemstr@spotify.com>
 
 ARG IMAGE_VERSION
