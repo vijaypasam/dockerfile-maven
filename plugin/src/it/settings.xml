@@ -53,4 +53,13 @@
       </pluginRepositories>
     </profile>
   </profiles>
+
+  <servers>
+    <!-- Nonexistent Docker registry server used for testing authentication. -->
+    <server>
+      <username>testuser</username>
+      <password>{oZT21IwPcEkHpuwQX3oZdg/NZHHOL69SDb5vJXxxixU=}</password>
+      <id>example.com</id>
+    </server>
+  </servers>
 </settings>
