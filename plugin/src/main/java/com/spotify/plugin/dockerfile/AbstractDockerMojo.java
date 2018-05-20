@@ -108,6 +108,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
   protected boolean useMavenSettingsForAuth;
 
   /**
+   * Whether to connect to Docker Daemon using HTTP proxy, if set.
+   */
+  @Parameter(defaultValue = "true", property = "dockerfile.useProxy")
+  protected boolean useProxy;
+
+  /**
    * Directory where test metadata will be written during build.
    */
   @Parameter(defaultValue = "${project.build.testOutputDirectory}",
@@ -417,6 +423,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
           .readTimeoutMillis(readTimeoutMillis)
           .connectTimeoutMillis(connectTimeoutMillis)
           .registryAuthSupplier(authSupplier)
+          .useProxy(useProxy)
           .build();
     } catch (DockerCertificateException e) {
       throw new MojoExecutionException("Could not load Docker certificates", e);
