@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.spotify</groupId>
     <artifactId>dockerfile-maven</artifactId>
-    <version>1.4.1-SNAPSHOT</version>
+    <version>1.4.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>dockerfile-maven-plugin</artifactId>
@@ -15,7 +15,7 @@
   <description>Adds support for building Dockerfiles in Maven</description>
 
   <properties>
-    <docker-client.version>8.11.1</docker-client.version>
+    <docker-client.version>8.11.4</docker-client.version>
   </properties>
 
   <dependencyManagement>
@@ -48,7 +48,7 @@
     <dependency>
       <groupId>com.spotify</groupId>
       <artifactId>dockerfile-maven-extension</artifactId>
-      <version>1.4.1-SNAPSHOT</version>
+      <version>1.4.3-SNAPSHOT</version>
     </dependency>
 
     <dependency>
