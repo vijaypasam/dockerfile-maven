@@ -248,6 +248,10 @@ Then, in your maven settings file, add configuration for the server:
 
 exactly as you would for any other server configuration.
 
+Since version 1.4.3, using an encrypted password in the Maven settings file is supported.  For more
+information about encrypting server passwords in `settings.xml`, 
+[read the documentation here](https://maven.apache.org/guides/mini/guide-encryption.html).
+
 ## Authenticating with maven pom.xml
 
 Since version 1.3.XX, you can authenticate using config from the pom itself.
