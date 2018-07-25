@@ -20,37 +20,34 @@
 
 package com.spotify.plugin.dockerfile;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.sonatype.plexus.components.sec.dispatcher.DefaultSecDispatcher.SYSTEM_PROPERTY_SEC_LOCATION;
-
 import com.spotify.docker.client.ImageRef;
 import com.spotify.docker.client.auth.RegistryAuthSupplier;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.RegistryAuth;
 import com.spotify.docker.client.messages.RegistryConfigs;
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.building.SettingsProblem;
+import org.apache.maven.settings.crypto.DefaultSettingsDecryptionRequest;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
+import org.apache.maven.settings.crypto.SettingsDecryptionRequest;
+import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.plexus.components.cipher.DefaultPlexusCipher;
-import org.sonatype.plexus.components.cipher.PlexusCipherException;
-import org.sonatype.plexus.components.sec.dispatcher.DefaultSecDispatcher;
-import org.sonatype.plexus.components.sec.dispatcher.SecDispatcherException;
-import org.sonatype.plexus.components.sec.dispatcher.SecUtil;
-import org.sonatype.plexus.components.sec.dispatcher.model.SettingsSecurity;
 
 public class MavenRegistryAuthSupplier implements RegistryAuthSupplier {
 
   private static final Logger log = LoggerFactory.getLogger(MavenRegistryAuthSupplier.class);
 
   private final Settings settings;
+  private final SettingsDecrypter settingsDecrypter;
 
-  public MavenRegistryAuthSupplier(final Settings settings) {
+  public MavenRegistryAuthSupplier(final Settings settings,
+                                   final SettingsDecrypter settingsDecrypter) {
     this.settings = settings;
+    this.settingsDecrypter = settingsDecrypter;
   }
 
   @Override
@@ -58,27 +55,7 @@ public class MavenRegistryAuthSupplier implements RegistryAuthSupplier {
     final ImageRef ref = new ImageRef(imageName);
     Server server = settings.getServer(ref.getRegistryName());
     if (server != null) {
-      String password = server.getPassword();
-      boolean encrypted = false;
-      try {
-        encrypted = isEncrypted(password);
-      } catch (PlexusCipherException e) {
-        log.warn("Couldn't determine if Maven server password is encrypted.");
-        log.warn("Assuming Maven server password *is not* encrypted.", e);
-      }
-      try {
-        log.debug("Maven server password is encrypted: {}", encrypted);
-        if (encrypted) {
-          password = decryptPassword(password);
-          log.debug("Successfully decrypted Maven server password");
-        }
-      } catch (PlexusCipherException | SecDispatcherException e) {
-        throw new DockerException("Failed to decrypt Maven server password", e);
-      }
-      return RegistryAuth.builder()
-        .username(server.getUsername())
-        .password(password)
-        .build();
+      return createRegistryAuth(server);
     }
     log.warn("Did not find maven server configuration for docker server " + ref.getRegistryName());
     return null;
@@ -93,69 +70,28 @@ public class MavenRegistryAuthSupplier implements RegistryAuthSupplier {
   public RegistryConfigs authForBuild() throws DockerException {
     final Map<String, RegistryAuth> allConfigs = new HashMap<>();
     for (Server server : settings.getServers()) {
-      allConfigs.put(
-          server.getId(),
-          RegistryAuth.builder()
-            .username(server.getUsername())
-            .password(server.getPassword())
-            .build()
-      );
+      allConfigs.put(server.getId(), createRegistryAuth(server));
     }
     return RegistryConfigs.create(allConfigs);
   }
 
-  /**
-   * Decrypts the supplied Maven server password using the master password from {@link
-   * SettingsSecurity}.
-   *
-   * @param encryptedPassword the encrypted server password
-   * @return the decrypted server password
-   * @throws PlexusCipherException if decryption fails
-   * @throws SecDispatcherException if {@link SettingsSecurity} can't be read
-   */
-  private String decryptPassword(String encryptedPassword)
-      throws PlexusCipherException, SecDispatcherException {
-    // Use -Dsettings.security=... to override the location of the security settings XML file.
-    String location = System
-        .getProperty(SYSTEM_PROPERTY_SEC_LOCATION, "~/.m2/settings-security.xml");
-    checkState(!isNullOrEmpty(location), "Location of settings-security.xml must not be empty");
-    String realLocation = location.charAt(0) == '~'
-        ? System.getProperty("user.home") + location.substring(1)
-        : location;
-    log.debug("Using location of '{}' for settings-security.xml",
-        new File(realLocation).getAbsolutePath());
-    SettingsSecurity settingsSecurity = SecUtil.read(realLocation, true);
-    String encryptedMasterPassword = settingsSecurity.getMaster();
-    String decryptedMasterPassword = decryptPassword(encryptedMasterPassword,
-        DefaultSecDispatcher.SYSTEM_PROPERTY_SEC_LOCATION);
-    return decryptPassword(encryptedPassword, decryptedMasterPassword);
-  }
+  private RegistryAuth createRegistryAuth(Server server) throws DockerException {
+    SettingsDecryptionRequest decryptionRequest = new DefaultSettingsDecryptionRequest(server);
+    SettingsDecryptionResult decryptionResult = settingsDecrypter.decrypt(decryptionRequest);
 
-  /**
-   * Decrypts a Maven server password.
-   *
-   * @param encryptedPassword the encrypted server password
-   * @param passPhrase the password used to encrypt the server password
-   * @return the decrypted password
-   * @throws PlexusCipherException if decryption fails
-   */
-  private static String decryptPassword(String encryptedPassword, String passPhrase)
-      throws PlexusCipherException {
-    DefaultPlexusCipher cipher = new DefaultPlexusCipher();
-    return cipher.decryptDecorated(encryptedPassword, passPhrase);
-  }
+    if (decryptionResult.getProblems().isEmpty()) {
+      log.debug("Successfully decrypted Maven server password");
+    } else {
+      for (SettingsProblem problem : decryptionResult.getProblems()) {
+        log.error("Settings problem for server {}: {}", server.getId(), problem);
+      }
 
-  /**
-   * Determines if the supplied Maven server password is encrypted or not.
-   *
-   * @param password the password to test
-   * @return true if the password is encrypted, otherwise false
-   * @see <a href=https://maven.apache.org/guides/mini/guide-encryption.html">Password
-   *     Encryption</a>
-   * @throws PlexusCipherException if the decryption algorithm isn't available
-   */
-  private static boolean isEncrypted(String password) throws PlexusCipherException {
-    DefaultPlexusCipher cipher = new DefaultPlexusCipher();
-    return cipher.isEncryptedString(password);
+      throw new DockerException("Failed to decrypt Maven server password");
+    }
+
+    return RegistryAuth.builder()
+            .username(server.getUsername())
+            .password(decryptionResult.getServer().getPassword())
+            .build();
   }
 }

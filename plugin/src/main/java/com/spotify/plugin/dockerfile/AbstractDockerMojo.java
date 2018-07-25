@@ -52,6 +52,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 
@@ -229,6 +230,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
    */
   @Component
   private MavenProjectHelper projectHelper;
+
+  /**
+   * The settings decrypter.
+   */
+  @Component
+  private SettingsDecrypter settingsDecrypter;
 
   protected abstract void execute(DockerClient dockerClient)
       throws MojoExecutionException, MojoFailureException;
@@ -435,7 +442,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
     final List<RegistryAuthSupplier> suppliers = new ArrayList<>();
 
     if (useMavenSettingsForAuth) {
-      suppliers.add(new MavenRegistryAuthSupplier(session.getSettings()));
+      suppliers.add(new MavenRegistryAuthSupplier(session.getSettings(), settingsDecrypter));
     }
 
     if (dockerConfigFile == null || "".equals(dockerConfigFile.getName())) {
