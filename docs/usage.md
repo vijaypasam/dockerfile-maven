@@ -37,4 +37,5 @@ mvn clean package -Ddockerfile.skip
 | `dockerfile.tag` | The tag to apply when building the Dockerfile, which is appended to the repository. | no | latest |
 | `dockerfile.build.pullNewerImage` | Updates base images automatically. | no | true |
 | `dockerfile.build.noCache` | Do not use cache when building the image. | no | false |
+| `dockerfile.build.cacheFrom` | Docker image used as cache-from. Pulled in advance if not exist locally or `pullNewerImage` is `false` | no | none |
 | `dockerfile.buildArgs` | Custom build arguments. | no | none |
