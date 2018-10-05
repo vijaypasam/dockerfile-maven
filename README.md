@@ -4,7 +4,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.spotify/dockerfile-maven.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.spotify%22%20dockerfile-maven)
 [![License](https://img.shields.io/github/license/spotify/dockerfile-maven.svg)](LICENSE)
 
-This is Maven plugin helps Maven integrate with Docker.
+This is a Maven plugin helps Maven integrate with Docker.
 
 The design goals are:
 
