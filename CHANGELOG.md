@@ -1,9 +1,12 @@
 # Changelog
 
-## 1.4.6 (release TBD)
+## 1.4.7 (release October 8 2018)
 - Fix an ExceptionInInitializerError when plugin is used on Java 11 ([230][])
+- change source/target version for compiler from 1.7 to 1.8. This means that
+  the plugin will only run on Java 8 and above. ([231])
 
 [230]: https://github.com/spotify/dockerfile-maven/pull/230
+[231]: https://github.com/spotify/dockerfile-maven/pull/231
 
 ## 1.4.6 (released October 5 2018)
 
