@@ -64,6 +64,16 @@
       <email>dflemstr@spotify.com</email>
       <name>David Flemström</name>
     </developer>
+    <developer>
+      <id>davidxia</id>
+      <email>dxia@spotify.com</email>
+      <name>David Xia</name>
+    </developer>
+    <developer>
+      <id>mattnworb</id>
+      <email>mattbrown@spotify.com</email>
+      <name>Matt Brown</name>
+    </developer>
   </developers>
 
 </project>
