@@ -1,6 +1,11 @@
 # Changelog
 
 ## 1.4.6 (release TBD)
+- Fix an ExceptionInInitializerError when plugin is used on Java 11 ([230][])
+
+[230]: https://github.com/spotify/dockerfile-maven/pull/230
+
+## 1.4.6 (released October 5 2018)
 
 - Support for Java 9 and 10
 
