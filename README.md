@@ -90,6 +90,18 @@ ARG JAR_FILE
 ADD target/${JAR_FILE} /usr/share/myservice/myservice.jar
 ```
 
+**Important note**
+
+The most Maven-ish way to reference the build artifact would probably
+be to use the `project.build.directory` variable for referencing the
+'target'-directory. However, this results in an absolute path, which
+is not supported by the ADD command in the Dockerfile. Any such source
+must be inside the *context* of the Docker build and therefor must be
+referenced by a *relative path*. See https://github.com/spotify/dockerfile-maven/issues/101
+
+*Do **not** use `${project.build.directory}` as a way to reference your
+build directory.*
+
 ## What does it give me?
 
 There are many advantages to using this plugin for your builds.
