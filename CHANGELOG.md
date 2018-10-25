@@ -1,6 +1,14 @@
 # Changelog
 
-## 1.4.7 (release October 8 2018)
+## 1.4.9 (released October 25 2018)
+- Upgrade docker-client dep from 8.14.2 to 8.14.3 to fix spotify/docker-client#1100
+
+## 1.4.8 (released October 23 2018)
+- Upgrade docker-client dep from 8.14.0 to 8.14.2
+- Upgrade com.sparkjava:spark-core to fix CVE-2018-9159
+- Improve documentation on referencing build artifacts
+
+## 1.4.7 (released October 8 2018)
 - Fix an ExceptionInInitializerError when plugin is used on Java 11 ([230][])
 - change source/target version for compiler from 1.7 to 1.8. This means that
   the plugin will only run on Java 8 and above. ([231])
