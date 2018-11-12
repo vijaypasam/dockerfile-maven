@@ -39,3 +39,4 @@ mvn clean package -Ddockerfile.skip
 | `dockerfile.build.noCache` | Do not use cache when building the image. | no | false |
 | `dockerfile.build.cacheFrom` | Docker image used as cache-from. Pulled in advance if not exist locally or `pullNewerImage` is `false` | no | none |
 | `dockerfile.buildArgs` | Custom build arguments. | no | none |
+| `dockerfile.build.squash` | Squash newly built layers into a single new layer (experimental API 1.25+). | no | false |
