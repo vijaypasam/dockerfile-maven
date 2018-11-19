@@ -97,6 +97,9 @@ public class BuildMojo extends AbstractDockerMojo {
   @Parameter(property = "dockerfile.build.cacheFrom")
   private List<String> cacheFrom;
 
+  @Parameter(property = "dockerfile.build.squash", defaultValue = "false")
+  private boolean squash;
+
   @Override
   public void execute(DockerClient dockerClient)
       throws MojoExecutionException, MojoFailureException {
@@ -109,7 +112,7 @@ public class BuildMojo extends AbstractDockerMojo {
 
     final String imageId = buildImage(
         dockerClient, log, verbose, contextDirectory, repository, tag, pullNewerImage, noCache,
-        buildArgs, cacheFrom);
+        buildArgs, cacheFrom, squash);
 
     if (imageId == null) {
       log.warn("Docker build was successful, but no image was built");
@@ -142,7 +145,8 @@ public class BuildMojo extends AbstractDockerMojo {
                            boolean pullNewerImage,
                            boolean noCache,
                            @Nullable Map<String,String> buildArgs,
-                           @Nullable List<String> cacheFrom)
+                           @Nullable List<String> cacheFrom,
+                           boolean squash)
       throws MojoExecutionException, MojoFailureException {
 
     log.info(MessageFormat.format("Building Docker context {0}", contextDirectory));
@@ -187,6 +191,10 @@ public class BuildMojo extends AbstractDockerMojo {
         buildParameters.add(new DockerClient.BuildParam("cache-from",
                 encodeBuildParam(cacheFromExistLocally)));
       }
+    }
+
+    if (squash) {
+      buildParameters.add(new DockerClient.BuildParam("squash", encodeBuildParam(squash)));
     }
 
     final DockerClient.BuildParam[] buildParametersArray =
