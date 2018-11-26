@@ -45,13 +45,13 @@
             <goals>
               <goal>build</goal>
             </goals>
-            <configuration>
-              <buildArgs>
-                <IMAGE_VERSION>0.0.1</IMAGE_VERSION>
-              </buildArgs>
-            </configuration>
           </execution>
         </executions>
+        <configuration>
+          <buildArgs>
+            <IMAGE_VERSION>0.0.1</IMAGE_VERSION>
+          </buildArgs>
+        </configuration>
       </plugin>
     </plugins>
   </build>
