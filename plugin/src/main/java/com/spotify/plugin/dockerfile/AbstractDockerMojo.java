@@ -193,6 +193,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
   protected String classifier;
 
   /**
+   * Skip creation of the Docker info JAR.
+   */
+  @Parameter(defaultValue = "false", property = "dockerfile.skipDockerInfo")
+  protected boolean skipDockerInfo;
+
+  /**
    * The Maven project.
    */
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -276,6 +282,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
 
   protected void writeMetadata(Log log) throws MojoExecutionException {
     writeTestMetadata();
+    if (skipDockerInfo) {
+      return;
+    }
     final File jarFile = buildDockerInfoJar(log);
     attachJar(jarFile);
   }
