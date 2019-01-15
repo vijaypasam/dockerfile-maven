@@ -29,6 +29,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.building.SettingsProblem;
+import org.apache.maven.settings.crypto.DefaultSettingsDecryptionRequest;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
+import org.apache.maven.settings.crypto.SettingsDecryptionRequest;
+import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +42,12 @@ public class MavenRegistryAuthSupplier implements RegistryAuthSupplier {
   private static final Logger log = LoggerFactory.getLogger(MavenRegistryAuthSupplier.class);
 
   private final Settings settings;
+  private final SettingsDecrypter settingsDecrypter;
 
-  public MavenRegistryAuthSupplier(final Settings settings) {
+  public MavenRegistryAuthSupplier(final Settings settings,
+                                   final SettingsDecrypter settingsDecrypter) {
     this.settings = settings;
+    this.settingsDecrypter = settingsDecrypter;
   }
 
   @Override
@@ -47,10 +55,7 @@ public class MavenRegistryAuthSupplier implements RegistryAuthSupplier {
     final ImageRef ref = new ImageRef(imageName);
     Server server = settings.getServer(ref.getRegistryName());
     if (server != null) {
-      return RegistryAuth.builder()
-        .username(server.getUsername())
-        .password(server.getPassword())
-        .build();
+      return createRegistryAuth(server);
     }
     log.warn("Did not find maven server configuration for docker server " + ref.getRegistryName());
     return null;
@@ -65,15 +70,28 @@ public class MavenRegistryAuthSupplier implements RegistryAuthSupplier {
   public RegistryConfigs authForBuild() throws DockerException {
     final Map<String, RegistryAuth> allConfigs = new HashMap<>();
     for (Server server : settings.getServers()) {
-      allConfigs.put(
-          server.getId(),
-          RegistryAuth.builder()
-            .username(server.getUsername())
-            .password(server.getPassword())
-            .build()
-      );
+      allConfigs.put(server.getId(), createRegistryAuth(server));
     }
     return RegistryConfigs.create(allConfigs);
   }
 
+  private RegistryAuth createRegistryAuth(Server server) throws DockerException {
+    SettingsDecryptionRequest decryptionRequest = new DefaultSettingsDecryptionRequest(server);
+    SettingsDecryptionResult decryptionResult = settingsDecrypter.decrypt(decryptionRequest);
+
+    if (decryptionResult.getProblems().isEmpty()) {
+      log.debug("Successfully decrypted Maven server password");
+    } else {
+      for (SettingsProblem problem : decryptionResult.getProblems()) {
+        log.error("Settings problem for server {}: {}", server.getId(), problem);
+      }
+
+      throw new DockerException("Failed to decrypt Maven server password");
+    }
+
+    return RegistryAuth.builder()
+            .username(server.getUsername())
+            .password(decryptionResult.getServer().getPassword())
+            .build();
+  }
 }

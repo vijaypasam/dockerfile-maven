@@ -1,5 +1,30 @@
 # Changelog
 
+## upcoming release
+- Add support for --squash experimental build option ([248][])
+
+[248]: https://github.com/spotify/dockerfile-maven/pull/248
+
+## 1.4.9 (released October 25 2018)
+- Upgrade docker-client dep from 8.14.2 to 8.14.3 to fix spotify/docker-client#1100
+
+## 1.4.8 (released October 23 2018)
+- Upgrade docker-client dep from 8.14.0 to 8.14.2
+- Upgrade com.sparkjava:spark-core to fix CVE-2018-9159
+- Improve documentation on referencing build artifacts
+
+## 1.4.7 (released October 8 2018)
+- Fix an ExceptionInInitializerError when plugin is used on Java 11 ([230][])
+- change source/target version for compiler from 1.7 to 1.8. This means that
+  the plugin will only run on Java 8 and above. ([231])
+
+[230]: https://github.com/spotify/dockerfile-maven/pull/230
+[231]: https://github.com/spotify/dockerfile-maven/pull/231
+
+## 1.4.6 (released October 5 2018)
+
+- Support for Java 9 and 10
+
 ## 1.3.6 (released September 13 2017)
 
 - Add support for using maven settings.xml file to provide docker authorization ([65][])

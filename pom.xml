@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>dockerfile-maven</artifactId>
-  <version>1.3.7-SNAPSHOT</version>
+  <version>1.4.10-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Dockerfile Maven Support</name>
@@ -63,6 +63,16 @@
       <id>dflemstr</id>
       <email>dflemstr@spotify.com</email>
       <name>David Flemström</name>
+    </developer>
+    <developer>
+      <id>davidxia</id>
+      <email>dxia@spotify.com</email>
+      <name>David Xia</name>
+    </developer>
+    <developer>
+      <id>mattnworb</id>
+      <email>mattbrown@spotify.com</email>
+      <name>Matt Brown</name>
     </developer>
   </developers>
 

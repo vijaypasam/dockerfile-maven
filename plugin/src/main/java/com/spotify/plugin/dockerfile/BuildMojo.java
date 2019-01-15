@@ -23,7 +23,7 @@ package com.spotify.plugin.dockerfile;
 import com.google.gson.Gson;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
-
+import com.spotify.docker.client.exceptions.ImageNotFoundException;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -32,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -102,6 +103,12 @@ public class BuildMojo extends AbstractDockerMojo {
   @Parameter(property = "dockerfile.buildArgs")
   private Map<String,String> buildArgs;
 
+  @Parameter(property = "dockerfile.build.cacheFrom")
+  private List<String> cacheFrom;
+
+  @Parameter(property = "dockerfile.build.squash", defaultValue = "false")
+  private boolean squash;
+
   @Override
   public void execute(DockerClient dockerClient)
       throws MojoExecutionException, MojoFailureException {
@@ -120,8 +127,8 @@ public class BuildMojo extends AbstractDockerMojo {
       dockerfilePath = dockerfile.toPath();
     }
     final String imageId = buildImage(
-        dockerClient, log, verbose, contextDirectory.toPath(), dockerfilePath, repository, tag,
-        pullNewerImage, noCache, buildArgs);
+        dockerClient, log, verbose, contextDirectory.toPath(), dockerfilePath, repository, tag, 
+        pullNewerImage, noCache, buildArgs, cacheFrom, squash);
 
     if (imageId == null) {
       log.warn("Docker build was successful, but no image was built");
@@ -154,7 +161,9 @@ public class BuildMojo extends AbstractDockerMojo {
                            @Nonnull String tag,
                            boolean pullNewerImage,
                            boolean noCache,
-                           @Nullable Map<String,String> buildArgs)
+                           @Nullable Map<String,String> buildArgs,
+                           @Nullable List<String> cacheFrom,
+                           boolean squash)
       throws MojoExecutionException, MojoFailureException {
 
     log.info(MessageFormat.format("Building Docker context {0}", contextDirectory));
@@ -177,12 +186,33 @@ public class BuildMojo extends AbstractDockerMojo {
     }
 
     if (buildArgs != null && !buildArgs.isEmpty()) {
-      try {
-        final String encodedBuildArgs = URLEncoder.encode(new Gson().toJson(buildArgs), "utf-8");
-        buildParameters.add(new DockerClient.BuildParam("buildargs", encodedBuildArgs));
-      } catch (UnsupportedEncodingException e) {
-        throw new MojoExecutionException("Could not build image", e);
+      buildParameters.add(new DockerClient.BuildParam("buildargs", encodeBuildParam(buildArgs)));
+    }
+
+    if (cacheFrom != null) {
+      final List<String> cacheFromExistLocally = new ArrayList<>();
+      for (String image : cacheFrom) {
+        try {
+          if (pullNewerImage || !imageExistLocally(dockerClient, image)) {
+            dockerClient.pull(image);
+          }
+          log.info(MessageFormat.format("Build will use image {0} for cache-from", image));
+          cacheFromExistLocally.add(image);
+        } catch (ImageNotFoundException e) {
+          log.warn(MessageFormat.format(
+                  "Image {0} not found, build will not use it for cache-from", image));
+        } catch (DockerException | InterruptedException e) {
+          throw new MojoExecutionException("Could not pull cache-from image", e);
+        }
       }
+      if (!cacheFromExistLocally.isEmpty()) {
+        buildParameters.add(new DockerClient.BuildParam("cache-from",
+                encodeBuildParam(cacheFromExistLocally)));
+      }
+    }
+
+    if (squash) {
+      buildParameters.add(new DockerClient.BuildParam("squash", encodeBuildParam(squash)));
     }
 
     final DockerClient.BuildParam[] buildParametersArray =
@@ -236,6 +266,24 @@ public class BuildMojo extends AbstractDockerMojo {
         throw new MojoFailureException("Dockerfile " + dockerfile
             + " is not a child of the context directory: " + contextDirectory);
       }
+    }
+  }
+  
+  private static String encodeBuildParam(Object buildParam) throws MojoExecutionException {
+    try {
+      return URLEncoder.encode(new Gson().toJson(buildParam), "utf-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new MojoExecutionException("Could not build image", e);
+    }
+  }
+
+  private static boolean imageExistLocally(DockerClient dockerClient, String image)
+          throws DockerException, InterruptedException {
+    try {
+      dockerClient.inspectImage(image);
+      return true;
+    } catch (ImageNotFoundException e) {
+      return false;
     }
   }
 

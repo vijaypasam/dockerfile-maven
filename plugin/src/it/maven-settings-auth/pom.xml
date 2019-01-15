@@ -3,7 +3,7 @@
   -/-/-
   Dockerfile Maven Plugin
   %%
-  Copyright (C) 2015 - 2016 Spotify AB
+  Copyright (C) 2015 - 2018 Spotify AB
   %%
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -24,13 +24,16 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.spotify.it</groupId>
-  <artifactId>basic-with-build-args</artifactId>
+  <artifactId>maven-settings-auth</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <description>A simple IT verifying a basic use case with build arguments.</description>
+  <description>Tests Docker registry authentication using an encrypted password in the Maven
+    settings.xml file.
+  </description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
 
   <build>
@@ -44,13 +47,14 @@
             <id>default</id>
             <goals>
               <goal>build</goal>
+              <goal>push</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <buildArgs>
-            <IMAGE_VERSION>0.0.1</IMAGE_VERSION>
-          </buildArgs>
+          <repository>example.com/test/build</repository>
+          <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
+          <googleContainerRegistryEnabled>false</googleContainerRegistryEnabled>
         </configuration>
       </plugin>
     </plugins>

@@ -52,6 +52,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 
@@ -108,6 +109,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
   protected boolean useMavenSettingsForAuth;
 
   /**
+   * Whether to connect to Docker Daemon using HTTP proxy, if set.
+   */
+  @Parameter(defaultValue = "true", property = "dockerfile.useProxy")
+  protected boolean useProxy;
+
+  /**
    * Directory where test metadata will be written during build.
    */
   @Parameter(defaultValue = "${project.build.testOutputDirectory}",
@@ -133,6 +140,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
    */
   @Parameter(defaultValue = "1", property = "dockerfile.retryCount")
   protected int retryCount;
+
+  @Parameter(property = "dockerfile.username")
+  protected String username;
+
+  @Parameter(property = "dockerfile.password")
+  protected String password;
 
   /**
    * Whether to output a verbose log when performing various operations.
@@ -180,6 +193,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
   protected String classifier;
 
   /**
+   * Skip creation of the Docker info JAR.
+   */
+  @Parameter(defaultValue = "false", property = "dockerfile.skipDockerInfo")
+  protected boolean skipDockerInfo;
+
+  /**
    * The Maven project.
    */
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -217,6 +236,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
    */
   @Component
   private MavenProjectHelper projectHelper;
+
+  /**
+   * The settings decrypter.
+   */
+  @Component
+  private SettingsDecrypter settingsDecrypter;
 
   protected abstract void execute(DockerClient dockerClient)
       throws MojoExecutionException, MojoFailureException;
@@ -257,6 +282,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
 
   protected void writeMetadata(Log log) throws MojoExecutionException {
     writeTestMetadata();
+    if (skipDockerInfo) {
+      return;
+    }
     final File jarFile = buildDockerInfoJar(log);
     attachJar(jarFile);
   }
@@ -411,6 +439,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
           .readTimeoutMillis(readTimeoutMillis)
           .connectTimeoutMillis(connectTimeoutMillis)
           .registryAuthSupplier(authSupplier)
+          .useProxy(useProxy)
           .build();
     } catch (DockerCertificateException e) {
       throw new MojoExecutionException("Could not load Docker certificates", e);
@@ -422,7 +451,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
     final List<RegistryAuthSupplier> suppliers = new ArrayList<>();
 
     if (useMavenSettingsForAuth) {
-      suppliers.add(new MavenRegistryAuthSupplier(session.getSettings()));
+      suppliers.add(new MavenRegistryAuthSupplier(session.getSettings(), settingsDecrypter));
     }
 
     if (dockerConfigFile == null || "".equals(dockerConfigFile.getName())) {
@@ -435,7 +464,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
           )
       );
     }
-
     if (googleContainerRegistryEnabled) {
       try {
         final RegistryAuthSupplier googleSupplier = googleContainerRegistryAuthSupplier();
@@ -447,6 +475,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
       }
     } else {
       getLog().info("Google Container Registry support is disabled");
+    }
+
+    MavenPomAuthSupplier pomSupplier = new MavenPomAuthSupplier(this.username, this.password);
+    if (pomSupplier.hasUserName()) {
+      suppliers.add(pomSupplier);
     }
 
     return new MultiRegistryAuthSupplier(suppliers);
