@@ -1,9 +1,11 @@
 # Changelog
 
-## upcoming release
+## 1.4.10 (released January 15 2019)
 - Add support for --squash experimental build option ([248][])
+- Add support for specifying a custom Dockerfile location ([89][])
 
 [248]: https://github.com/spotify/dockerfile-maven/pull/248
+[89]: https://github.com/spotify/dockerfile-maven/pull/89
 
 ## 1.4.9 (released October 25 2018)
 - Upgrade docker-client dep from 8.14.2 to 8.14.3 to fix spotify/docker-client#1100
