@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,12 +50,19 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class BuildMojo extends AbstractDockerMojo {
 
   /**
-   * Directory containing the Dockerfile to build.
+   * Directory containing the the build context. This is typically the directory that contains
+   * your Dockerfile.
    */
   @Parameter(defaultValue = "${project.basedir}",
       property = "dockerfile.contextDirectory",
       required = true)
   private File contextDirectory;
+
+  /**
+   * Path to the Dockerfile to build. The specified file must reside withing the build context
+   */
+  @Parameter(property = "dockerfile.dockerfile", required = false)
+  private File dockerfile;
 
   /**
    * The repository to put the built image into when building the Dockerfile, for example
@@ -110,9 +119,16 @@ public class BuildMojo extends AbstractDockerMojo {
       return;
     }
 
+    log.info("dockerfile: " + dockerfile);
+    log.info("contextDirectory: " + contextDirectory);
+
+    Path dockerfilePath = null;
+    if (dockerfile != null) {
+      dockerfilePath = dockerfile.toPath();
+    }
     final String imageId = buildImage(
-        dockerClient, log, verbose, contextDirectory, repository, tag, pullNewerImage, noCache,
-        buildArgs, cacheFrom, squash);
+        dockerClient, log, verbose, contextDirectory.toPath(), dockerfilePath, repository, tag, 
+        pullNewerImage, noCache, buildArgs, cacheFrom, squash);
 
     if (imageId == null) {
       log.warn("Docker build was successful, but no image was built");
@@ -139,7 +155,8 @@ public class BuildMojo extends AbstractDockerMojo {
   static String buildImage(@Nonnull DockerClient dockerClient,
                            @Nonnull Log log,
                            boolean verbose,
-                           @Nonnull File contextDirectory,
+                           @Nonnull Path contextDirectory,
+                           @Nullable Path dockerfile,
                            @Nullable String repository,
                            @Nonnull String tag,
                            boolean pullNewerImage,
@@ -151,15 +168,16 @@ public class BuildMojo extends AbstractDockerMojo {
 
     log.info(MessageFormat.format("Building Docker context {0}", contextDirectory));
 
-    if (!new File(contextDirectory, "Dockerfile").exists()
-        && !new File(contextDirectory, "dockerfile").exists()) {
-      log.error("Missing Dockerfile in context directory: " + contextDirectory.getPath());
-      throw new MojoFailureException("Missing Dockerfile in context directory: "
-                                     + contextDirectory.getPath());
+
+    requireValidDockerFilePath(log, contextDirectory, dockerfile);
+
+    final ArrayList<DockerClient.BuildParam> buildParameters = new ArrayList<>();
+    if (dockerfile != null) {
+      buildParameters.add(DockerClient.BuildParam.dockerfile(
+          contextDirectory.relativize(dockerfile)));
     }
 
     final LoggingProgressHandler progressHandler = new LoggingProgressHandler(log, verbose);
-    final ArrayList<DockerClient.BuildParam> buildParameters = new ArrayList<>();
     if (pullNewerImage) {
       buildParameters.add(DockerClient.BuildParam.pullNewerImage());
     }
@@ -206,11 +224,11 @@ public class BuildMojo extends AbstractDockerMojo {
         final String name = formatImageName(repository, tag);
         log.info(MessageFormat.format("Image will be built as {0}", name));
         log.info(""); // Spacing around build progress
-        dockerClient.build(contextDirectory.toPath(), name, progressHandler, buildParametersArray);
+        dockerClient.build(contextDirectory, name, progressHandler, buildParametersArray);
       } else {
         log.info("Image will be built without a name");
         log.info(""); // Spacing around build progress
-        dockerClient.build(contextDirectory.toPath(), progressHandler, buildParametersArray);
+        dockerClient.build(contextDirectory, progressHandler, buildParametersArray);
       }
     } catch (DockerException | IOException | InterruptedException e) {
       throw new MojoExecutionException("Could not build image", e);
@@ -220,6 +238,37 @@ public class BuildMojo extends AbstractDockerMojo {
     return progressHandler.builtImageId();
   }
 
+  private static void requireValidDockerFilePath(@Nonnull Log log,
+                                                 @Nonnull Path contextDirectory,
+                                                 @Nullable Path dockerfile)
+      throws MojoFailureException {
+
+    log.info("Path(dockerfile): " + dockerfile);
+    log.info("Path(contextDirectory): " + contextDirectory);
+
+    if (dockerfile == null
+            && !Files.exists(contextDirectory.resolve("Dockerfile"))
+            && !Files.exists(contextDirectory.resolve("dockerfile"))) {
+      // user did not override the default value
+      log.error("Missing Dockerfile in context directory: " + contextDirectory);
+      throw new MojoFailureException("Missing Dockerfile in context directory: "
+          + contextDirectory);
+    }
+
+    if (dockerfile != null) {
+      if (!Files.exists(dockerfile)) {
+        log.error("Missing Dockerfile at " + dockerfile);
+        throw new MojoFailureException("Missing Dockerfile at " + dockerfile);
+      }
+      if (!dockerfile.startsWith(contextDirectory)) {
+        log.error("Dockerfile " + dockerfile + " is not a child of the context directory: "
+            + contextDirectory);
+        throw new MojoFailureException("Dockerfile " + dockerfile
+            + " is not a child of the context directory: " + contextDirectory);
+      }
+    }
+  }
+  
   private static String encodeBuildParam(Object buildParam) throws MojoExecutionException {
     try {
       return URLEncoder.encode(new Gson().toJson(buildParam), "utf-8");
