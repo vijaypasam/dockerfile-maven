@@ -20,6 +20,7 @@
 
 package com.spotify.plugin.dockerfile;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
@@ -222,7 +223,13 @@ public class BuildMojo extends AbstractDockerMojo {
     log.info(""); // Spacing around build progress
     try {
       if (repository != null) {
-        validateRepository(repository);
+        if (!validateRepository(repository)) {
+          throw new MojoFailureException(
+                  "Repo name \""
+                          + repository
+                          + "\" must contain only lowercase, numbers, '-', '_' or '.'.");
+        }
+          ;
         final String name = formatImageName(repository, tag);
         log.info(MessageFormat.format("Image will be built as {0}", name));
         log.info(""); // Spacing around build progress
@@ -240,19 +247,12 @@ public class BuildMojo extends AbstractDockerMojo {
     return progressHandler.builtImageId();
   }
 
-  private static String VALID_REPO_REGEX =
-          "^([a-z0-9_.-])+(\\/[a-z0-9_.-]+)*$";
+  private static final String VALID_REPO_REGEX = "^([a-z0-9_.-])+(\\/[a-z0-9_.-]+)*$";
 
-
-  static void validateRepository(@Nonnull String repository)
-      throws MojoFailureException {
+  @VisibleForTesting
+  static boolean validateRepository(@Nonnull String repository) {
     Pattern pattern = Pattern.compile(VALID_REPO_REGEX);
-    if (!pattern.matcher(repository).matches()) {
-      throw new MojoFailureException(
-              "Repo name \""
-                      + repository
-                      + "\" must contain only lowercase, numbers, '-', '_' or '.'.");
-    }
+    return pattern.matcher(repository).matches();
   }
 
   private static void requireValidDockerFilePath(@Nonnull Log log,

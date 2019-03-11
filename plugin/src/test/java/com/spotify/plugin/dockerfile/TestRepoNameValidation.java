@@ -20,6 +20,7 @@
 
 package com.spotify.plugin.dockerfile;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.maven.plugin.MojoFailureException;
@@ -31,42 +32,32 @@ public class TestRepoNameValidation {
 
   @Test
   public void testSuccess() throws MojoFailureException {
-    BuildMojo.validateRepository("alllowercase");
-    BuildMojo.validateRepository("with000numbers");
-    BuildMojo.validateRepository("00withnumbers");
-    BuildMojo.validateRepository("00757383");
-    BuildMojo.validateRepository("withnumbers34343");
-    BuildMojo.validateRepository("with-hyphens");
-    BuildMojo.validateRepository("with_underscores");
-    BuildMojo.validateRepository("with.dots");
-    BuildMojo.validateRepository("______");
-    BuildMojo.validateRepository("------");
-    BuildMojo.validateRepository("......");
-    BuildMojo.validateRepository("example.com/okay./.path");
-    BuildMojo.validateRepository(".start.and.end.");
-    BuildMojo.validateRepository("-start-and-end-");
-    BuildMojo.validateRepository("_start_and_end_");
+    assertTrue("All lower case should work", BuildMojo.validateRepository("alllowercase"));
+    assertTrue("With numbers", BuildMojo.validateRepository("with000numbers"));
+    assertTrue("Begin with numbers", BuildMojo.validateRepository("00withnumbers"));
+    assertTrue("All numbers", BuildMojo.validateRepository("00757383"));
+    assertTrue("End with numbers", BuildMojo.validateRepository("withnumbers34343"));
+    assertTrue("With hyphens", BuildMojo.validateRepository("with-hyphens"));
+    assertTrue("with underscores", BuildMojo.validateRepository("with_underscores"));
+    assertTrue("With dots", BuildMojo.validateRepository("with.dots"));
+    assertTrue("All underscores", BuildMojo.validateRepository("______"));
+    assertTrue("All hyphens", BuildMojo.validateRepository("------"));
+    assertTrue("All dots", BuildMojo.validateRepository("......"));
+    assertTrue("Multipart", BuildMojo.validateRepository("example.com/okay./.path"));
+    assertTrue("Start and end with dots", BuildMojo.validateRepository(".start.and.end."));
+    assertTrue("Start and end with hyphens", BuildMojo.validateRepository("-start-and-end-"));
+    assertTrue("Start and end with underscores", BuildMojo.validateRepository("_start_and_end_"));
     // Forward slash delimits the repo user from the repo name; strictly speaking,
     // you're allowed only one slash, somewhere in the middle.
-    BuildMojo.validateRepository("with/forwardslash");
-    BuildMojo.validateRepository("with/multiple/forwardslash");
-  }
-
-  private boolean throwsMojoFailure(String repoName) {
-    boolean threw = false;
-    try {
-      BuildMojo.validateRepository(repoName);
-    } catch (MojoFailureException e) {
-      threw = true;
-    }
-    return threw;
+    assertTrue("Multipart", BuildMojo.validateRepository("with/forwardslash"));
+    assertTrue("Multi-multipart", BuildMojo.validateRepository("with/multiple/forwardslash"));
   }
 
   @Test
   public void testFailCases() {
-    assertTrue("Mixed case didn't fail", throwsMojoFailure("ddddddDddddd"));
-    assertTrue("Symbols didn't fail", throwsMojoFailure("ddddddDd+dddd"));
-    assertTrue("Starting slash didn't fail", throwsMojoFailure("/atstart"));
-    assertTrue("Ending slash didn't fail", throwsMojoFailure("atend/"));
+    assertFalse("Mixed case didn't fail", BuildMojo.validateRepository("ddddddDddddd"));
+    assertFalse("Symbols didn't fail", BuildMojo.validateRepository("ddddddDd+dddd"));
+    assertFalse("Starting slash didn't fail", BuildMojo.validateRepository("/atstart"));
+    assertFalse("Ending slash didn't fail", BuildMojo.validateRepository("atend/"));
   }
 }
