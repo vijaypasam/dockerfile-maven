@@ -50,6 +50,10 @@ import org.apache.maven.plugins.annotations.Parameter;
     requiresProject = true,
     threadSafe = true)
 public class BuildMojo extends AbstractDockerMojo {
+  /**
+   * Regex for a valid docker repository name.  Used in validateRepository().
+   */
+  private static final String VALID_REPO_REGEX = "^([a-z0-9_.-])+(\\/[a-z0-9_.-]+)*$";
 
   /**
    * Directory containing the the build context. This is typically the directory that contains
@@ -229,7 +233,7 @@ public class BuildMojo extends AbstractDockerMojo {
                           + repository
                           + "\" must contain only lowercase, numbers, '-', '_' or '.'.");
         }
-          ;
+
         final String name = formatImageName(repository, tag);
         log.info(MessageFormat.format("Image will be built as {0}", name));
         log.info(""); // Spacing around build progress
@@ -246,8 +250,6 @@ public class BuildMojo extends AbstractDockerMojo {
 
     return progressHandler.builtImageId();
   }
-
-  private static final String VALID_REPO_REGEX = "^([a-z0-9_.-])+(\\/[a-z0-9_.-]+)*$";
 
   @VisibleForTesting
   static boolean validateRepository(@Nonnull String repository) {
