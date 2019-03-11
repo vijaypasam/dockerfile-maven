@@ -34,6 +34,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -221,6 +222,7 @@ public class BuildMojo extends AbstractDockerMojo {
     log.info(""); // Spacing around build progress
     try {
       if (repository != null) {
+        validateRepository(repository);
         final String name = formatImageName(repository, tag);
         log.info(MessageFormat.format("Image will be built as {0}", name));
         log.info(""); // Spacing around build progress
@@ -236,6 +238,20 @@ public class BuildMojo extends AbstractDockerMojo {
     log.info(""); // Spacing around build progress
 
     return progressHandler.builtImageId();
+  }
+
+  private static String VALID_REPO_REGEX =
+          "^([a-z0-9_.-])+(\\/(?=[a-z0-9_.-])[a-z0-9_.-]+)*$";
+
+
+  static void validateRepository(@Nonnull String repository)
+      throws MojoFailureException {
+    Pattern pattern = Pattern.compile(VALID_REPO_REGEX);
+    if (!pattern.matcher(repository).matches()) {
+      throw new MojoFailureException(
+              "Repo name \"" + repository +
+                      "\" must contain only lowercase, numbers, '-', '_' or '.'.");
+    }
   }
 
   private static void requireValidDockerFilePath(@Nonnull Log log,
