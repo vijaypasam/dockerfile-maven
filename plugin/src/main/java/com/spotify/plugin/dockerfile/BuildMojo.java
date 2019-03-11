@@ -241,7 +241,7 @@ public class BuildMojo extends AbstractDockerMojo {
   }
 
   private static String VALID_REPO_REGEX =
-          "^([a-z0-9_.-])+(\\/(?=[a-z0-9_.-])[a-z0-9_.-]+)*$";
+          "^([a-z0-9_.-])+(\\/[a-z0-9_.-]+)*$";
 
 
   static void validateRepository(@Nonnull String repository)
@@ -249,8 +249,9 @@ public class BuildMojo extends AbstractDockerMojo {
     Pattern pattern = Pattern.compile(VALID_REPO_REGEX);
     if (!pattern.matcher(repository).matches()) {
       throw new MojoFailureException(
-              "Repo name \"" + repository +
-                      "\" must contain only lowercase, numbers, '-', '_' or '.'.");
+              "Repo name \""
+                      + repository
+                      + "\" must contain only lowercase, numbers, '-', '_' or '.'.");
     }
   }
 
