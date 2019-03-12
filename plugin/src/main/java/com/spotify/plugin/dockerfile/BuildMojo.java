@@ -20,6 +20,7 @@
 
 package com.spotify.plugin.dockerfile;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
@@ -34,6 +35,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -48,6 +50,10 @@ import org.apache.maven.plugins.annotations.Parameter;
     requiresProject = true,
     threadSafe = true)
 public class BuildMojo extends AbstractDockerMojo {
+  /**
+   * Regex for a valid docker repository name.  Used in validateRepository().
+   */
+  private static final String VALID_REPO_REGEX = "^([a-z0-9_.-])+(\\/[a-z0-9_.-]+)*$";
 
   /**
    * Directory containing the the build context. This is typically the directory that contains
@@ -221,6 +227,13 @@ public class BuildMojo extends AbstractDockerMojo {
     log.info(""); // Spacing around build progress
     try {
       if (repository != null) {
+        if (!validateRepository(repository)) {
+          throw new MojoFailureException(
+                  "Repo name \""
+                          + repository
+                          + "\" must contain only lowercase, numbers, '-', '_' or '.'.");
+        }
+
         final String name = formatImageName(repository, tag);
         log.info(MessageFormat.format("Image will be built as {0}", name));
         log.info(""); // Spacing around build progress
@@ -236,6 +249,12 @@ public class BuildMojo extends AbstractDockerMojo {
     log.info(""); // Spacing around build progress
 
     return progressHandler.builtImageId();
+  }
+
+  @VisibleForTesting
+  static boolean validateRepository(@Nonnull String repository) {
+    Pattern pattern = Pattern.compile(VALID_REPO_REGEX);
+    return pattern.matcher(repository).matches();
   }
 
   private static void requireValidDockerFilePath(@Nonnull Log log,
